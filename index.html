@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BütçePro">
+<meta name="theme-color" content="#080a0f">
+<title>BütçePro</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080a0f; --surface:#11141c; --surface2:#181c27; --surface3:#1f2433;
+  --accent:#4ade80; --accent-dim:rgba(74,222,128,0.12);
+  --red:#f87171; --red-dim:rgba(248,113,113,0.12);
+  --yellow:#fbbf24; --yellow-dim:rgba(251,191,36,0.1);
+  --blue:#60a5fa; --blue-dim:rgba(96,165,250,0.12);
+  --purple:#a78bfa; --purple-dim:rgba(167,139,250,0.12);
+  --orange:#fb923c; --orange-dim:rgba(251,146,60,0.12);
+  --text:#f1f5f9; --text2:#64748b; --text3:#94a3b8;
+  --border:#1a2030; --radius:20px; --radius-sm:14px;
+  --nav-h:70px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text)}
+.app{display:flex;flex-direction:column;height:100%;max-width:430px;margin:0 auto;position:relative}
+.safe-top{height:var(--safe-t);background:var(--bg);flex-shrink:0}
+
+/* SCREENS */
+.screen{display:none;flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:calc(var(--nav-h) + var(--safe-b) + 16px);-webkit-overflow-scrolling:touch}
+.screen.active{display:block}
+.screen::-webkit-scrollbar{display:none}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);background:rgba(8,10,15,0.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:6px;z-index:100}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;border:none;background:none;transition:transform 0.15s}
+.ni:active{transform:scale(0.88)}
+.ni-icon{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;background:transparent;transition:all 0.2s}
+.ni.active .ni-icon{background:var(--accent-dim)}
+.ni-lbl{font-size:9px;font-weight:700;color:var(--text2);letter-spacing:0.3px;transition:color 0.2s}
+.ni.active .ni-lbl{color:var(--accent)}
+
+/* FAB */
+.fab{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 14px);right:20px;width:52px;height:52px;border-radius:17px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:26px;color:#080a0f;box-shadow:0 6px 24px rgba(74,222,128,0.45);z-index:101;transition:all 0.2s;font-weight:300;line-height:1}
+.fab:active{transform:scale(0.9)}
+
+/* PAGE HEADER */
+.ph{padding:18px 18px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.ph-title{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.ph-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.ph-badge{background:var(--surface2);border:1px solid var(--border);border-radius:50px;padding:6px 12px;font-size:11px;color:var(--text3);white-space:nowrap}
+
+/* HERO CARD */
+.hero{margin:16px 18px 0;background:linear-gradient(135deg,#152219 0%,#0d1520 50%,#15152a 100%);border:1px solid rgba(74,222,128,0.15);border-radius:22px;padding:22px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(74,222,128,0.13) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;bottom:-40px;left:10px;width:150px;height:150px;background:radial-gradient(circle,rgba(96,165,250,0.08) 0%,transparent 70%)}
+.hero-lbl{font-size:11px;color:rgba(241,245,249,0.45);font-weight:600;text-transform:uppercase;letter-spacing:1.2px}
+.hero-amt{font-size:40px;font-weight:800;letter-spacing:-1.5px;margin:5px 0 18px;position:relative;z-index:1}
+.hero-amt.pos{color:var(--accent)} .hero-amt.neg{color:var(--red)}
+.hero-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;position:relative;z-index:1}
+.hero-stat{background:rgba(255,255,255,0.05);border-radius:13px;padding:11px 10px}
+.hero-stat-lbl{font-size:9px;color:rgba(241,245,249,0.4);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.hero-stat-val{font-size:15px;font-weight:800;margin-top:3px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:12px 18px 0}
+.card-sm{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:15px}
+
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 10px}
+.sh-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+.sh-dot{width:7px;height:7px;border-radius:50%}
+.sh-btn{font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;padding:4px 10px;border-radius:8px}
+
+/* CHIPS */
+.chips{display:flex;gap:7px;padding:10px 18px 0;overflow-x:auto}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:50px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.chip.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+/* TX ROW */
+.tx-list{display:flex;flex-direction:column;gap:8px;padding:0 18px}
+.tx-row{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;transition:all 0.15s;animation:fup 0.28s ease}
+@keyframes fup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.tx-row:active{background:var(--surface2)}
+.tx-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.tx-amt{font-size:14px;font-weight:800;flex-shrink:0}
+.tx-amt.pos{color:var(--accent)} .tx-amt.neg{color:var(--red)}
+.del-btn{background:var(--red-dim);border:none;color:var(--red);font-size:14px;cursor:pointer;padding:7px;border-radius:9px;flex-shrink:0;transition:all 0.15s}
+.del-btn:active{background:rgba(248,113,113,0.25)}
+
+/* LOAN CARD */
+.loan-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:0 18px 12px;animation:fup 0.28s ease}
+.loan-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.loan-icon-name{display:flex;align-items:center;gap:10px}
+.loan-ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.loan-name{font-size:15px;font-weight:700}
+.loan-bank{font-size:11px;color:var(--text2);margin-top:2px}
+.loan-total{text-align:right}
+.loan-total-lbl{font-size:10px;color:var(--text2);font-weight:600}
+.loan-total-val{font-size:18px;font-weight:800}
+.loan-progress{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin:12px 0 10px}
+.loan-prog-fill{height:100%;border-radius:4px;transition:width 0.6s ease}
+.loan-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.loan-stat{background:var(--surface2);border-radius:10px;padding:10px 8px;text-align:center}
+.loan-stat-lbl{font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.loan-stat-val{font-size:13px;font-weight:800;margin-top:3px}
+.loan-actions{display:flex;gap:8px;margin-top:12px}
+.loan-pay-btn{flex:1;padding:10px;border-radius:11px;border:none;background:var(--accent-dim);color:var(--accent);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.loan-pay-btn:active{background:rgba(74,222,128,0.2)}
+.loan-del-btn{padding:10px 14px;border-radius:11px;border:none;background:var(--red-dim);color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.2s}
+
+/* CC CARD */
+.cc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:0 18px 12px;animation:fup 0.28s ease}
+.cc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.cc-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;border:1.5px solid}
+.cc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.cc-stat{background:var(--surface2);border-radius:11px;padding:12px}
+.cc-stat-lbl{font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.cc-stat-val{font-size:16px;font-weight:800;margin-top:3px}
+.cc-due-bar{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:11px;padding:11px 13px;margin-bottom:12px}
+.cc-due-lbl{font-size:12px;color:var(--text2);font-weight:600}
+.cc-due-val{font-size:13px;font-weight:700}
+.cc-actions{display:flex;gap:8px}
+.cc-pay-btn{flex:1;padding:10px;border-radius:11px;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.cc-pay-min{background:var(--yellow-dim);color:var(--yellow)}
+.cc-pay-full{background:var(--accent-dim);color:var(--accent)}
+
+/* DAILY SPEND */
+.day-group{padding:0 18px}
+.day-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;padding:14px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.day-total{font-size:12px;font-weight:800;color:var(--red)}
+.spend-row{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:7px;animation:fup 0.25s ease}
+.spend-ico{width:38px;height:38px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.spend-info{flex:1}
+.spend-name{font-size:13px;font-weight:600}
+.spend-cat{font-size:11px;color:var(--text2);margin-top:1px}
+.spend-amt{font-size:14px;font-weight:800;color:var(--red)}
+
+/* NOTIF */
+.notif{display:none;margin:12px 18px 0;background:rgba(248,113,113,0.09);border:1px solid rgba(248,113,113,0.22);border-radius:13px;padding:11px 14px;font-size:12px;color:var(--red);font-weight:500;line-height:1.5}
+.notif.show{display:block}
+
+/* STATS GRID */
+.stats3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:14px 18px 0}
+.stat-b{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;text-align:center}
+.stat-b-val{font-size:16px;font-weight:800}
+.stat-b-lbl{font-size:9px;color:var(--text2);margin-top:2px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+
+/* BOTTOM SHEET */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;backdrop-filter:blur(5px);align-items:flex-end;justify-content:center}
+.overlay.open{display:flex;animation:fade 0.2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--surface);border-radius:26px 26px 0 0;width:100%;max-width:430px;padding-bottom:calc(24px + var(--safe-b));max-height:94vh;overflow-y:auto;animation:sup 0.3s cubic-bezier(0.34,1.4,0.64,1)}
+@keyframes sup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet::-webkit-scrollbar{display:none}
+.sh-handle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 0}
+.sh-title{font-size:17px;font-weight:800;padding:18px 22px 0;letter-spacing:-.3px}
+
+/* FORM */
+.fs{padding:14px 22px 0}
+.fl{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;display:block}
+.fi{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 15px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
+.fi:focus{border-color:var(--accent)}
+.fi::placeholder{color:var(--text2)}
+.fi option{background:var(--surface2)}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 22px;margin-top:14px}
+.form3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 22px;margin-top:14px}
+
+/* TYPE TOGGLE */
+.tt{display:flex;gap:8px}
+.ttb{flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;text-align:center}
+.ttb.sel-e{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.ttb.sel-i{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+/* SUBMIT */
+.sub-btn{display:block;width:calc(100% - 44px);margin:18px 22px 0;padding:15px;border-radius:14px;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:800;cursor:pointer;transition:all 0.2s;letter-spacing:-.2px}
+.sub-btn:active{transform:scale(0.97)}
+.sub-green{background:var(--accent);color:#080a0f}
+.sub-blue{background:var(--blue);color:#080a0f}
+.sub-purple{background:var(--purple);color:#080a0f}
+.sub-yellow{background:var(--yellow);color:#080a0f}
+
+/* RING */
+.ring-wrap{position:relative;width:68px;height:68px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.r-bg{fill:none;stroke:var(--surface2);stroke-width:6}
+.r-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1)}
+.ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-size:13px;font-weight:800}
+.ring-sub{font-size:8px;color:var(--text2);font-weight:700}
+
+/* BUDGET LIMIT CARD */
+.blc{margin:14px 18px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.blc-title{font-size:13px;font-weight:700;margin-bottom:10px}
+.blc-row{display:flex;gap:9px}
+.blc-input{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px 13px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;outline:none;transition:border-color 0.2s;-webkit-appearance:none}
+.blc-input:focus{border-color:var(--accent)}
+.blc-save{padding:12px 16px;background:var(--accent);color:#080a0f;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:800;border:none;border-radius:12px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.blc-save:active{transform:scale(0.95)}
+
+/* PROG BAR */
+.prog-bar{height:9px;background:var(--surface2);border-radius:5px;overflow:hidden;margin:12px 0 7px}
+.prog-fill{height:100%;border-radius:5px;transition:width 0.7s ease}
+
+/* GRID 2 */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.ms{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:13px}
+.ms-lbl{font-size:9px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.ms-val{font-size:17px;font-weight:800;margin-top:4px}
+
+/* EMPTY */
+.empty{text-align:center;padding:36px 20px;color:var(--text2)}
+.empty .ei{font-size:40px;margin-bottom:8px}
+.empty p{font-size:13px;line-height:1.6}
+
+/* PAY INPUT ROW for modals */
+.pay-row{display:flex;gap:10px;align-items:flex-end;padding:0 22px;margin-top:14px}
+.pay-row .fi{flex:1}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(var(--nav-h) + var(--safe-b) + 70px);left:50%;transform:translateX(-50%) translateY(20px);background:#1e2a1e;border:1.5px solid var(--accent);color:var(--accent);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;padding:11px 20px;border-radius:50px;white-space:nowrap;z-index:999;opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.red{background:#2a1e1e;border-color:var(--red);color:var(--red)}
+.toast.blue{background:#1e1e2a;border-color:var(--blue);color:var(--blue)}
+.toast.yellow{background:#2a261e;border-color:var(--yellow);color:var(--yellow)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="safe-top"></div>
+<div class="toast" id="toast"></div>
+
+<!-- === HOME === -->
+<div class="screen active" id="sc-home">
+  <div class="ph">
+    <div><div class="ph-title">Merhaba, Alper 👋</div><div class="ph-sub" id="homeDate"></div></div>
+    <div class="ph-badge" id="debtBadge"></div>
+  </div>
+  <div class="notif" id="notifBar"></div>
+  <div class="hero">
+    <div class="hero-lbl">NET BAKİYE</div>
+    <div class="hero-amt pos" id="heroNet">₺0</div>
+    <div class="hero-row">
+      <div class="hero-stat"><div class="hero-stat-lbl">Gelir</div><div class="hero-stat-val" style="color:var(--accent)" id="heroIn">₺0</div></div>
+      <div class="hero-stat"><div class="hero-stat-lbl">Gider</div><div class="hero-stat-val" style="color:var(--red)" id="heroEx">₺0</div></div>
+      <div class="hero-stat"><div class="hero-stat-lbl">Toplam Borç</div><div class="hero-stat-val" style="color:var(--purple)" id="heroDebt">₺0</div></div>
+    </div>
+  </div>
+  <!-- budget ring -->
+  <div class="card" id="budgetCard" style="display:none;flex-direction:row;align-items:center;gap:14px">
+    <div class="ring-wrap">
+      <svg width="68" height="68" viewBox="0 0 68 68"><circle class="r-bg" cx="34" cy="34" r="28"/><circle class="r-fill" id="ringFill" cx="34" cy="34" r="28" stroke-dasharray="175.9" stroke-dashoffset="175.9"/></svg>
+      <div class="ring-text"><span class="ring-pct" id="ringPct">0%</span><span class="ring-sub">BÜTÇE</span></div>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700">Aylık Bütçe</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px" id="budgetSub">Limit: ₺0</div>
+      <div style="font-size:17px;font-weight:800;margin-top:5px" id="budgetRem">₺0 kaldı</div>
+    </div>
+  </div>
+  <!-- upcoming payments -->
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--yellow)"></div>Yaklaşan Ödemeler</div><button class="sh-btn" style="color:var(--yellow)" onclick="goTo('reminders')">Tümü →</button></div>
+  <div id="homeRemList"></div>
+  <!-- upcoming loan payments -->
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--blue)"></div>Kredi / Kart Özeti</div><button class="sh-btn" style="color:var(--blue)" onclick="goTo('loans')">Tümü →</button></div>
+  <div id="homeLoanList"></div>
+  <!-- recent daily spends -->
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--orange)"></div>Bugünün Harcamaları</div><button class="sh-btn" style="color:var(--orange)" onclick="goTo('daily')">Tümü →</button></div>
+  <div id="homeDailyList"></div>
+</div>
+
+<!-- === LOANS & CREDIT CARDS === -->
+<div class="screen" id="sc-loans">
+  <div class="ph">
+    <div><div class="ph-title">Krediler & Kartlar</div><div class="ph-sub" id="loanSub">Toplam borç: ₺0</div></div>
+  </div>
+  <div class="chips" id="loanChips">
+    <div class="chip active" onclick="filterLoans('all',this)">Tümü</div>
+    <div class="chip" onclick="filterLoans('loan',this)">🏦 Krediler</div>
+    <div class="chip" onclick="filterLoans('cc',this)">💳 Kredi Kartı</div>
+  </div>
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--blue)"></div>Kredi Listesi</div><button class="sh-btn" style="color:var(--red)" onclick="clearLoans()">Tümünü Sil</button></div>
+  <div id="loanList"></div>
+</div>
+
+<!-- === DAILY EXPENSES === -->
+<div class="screen" id="sc-daily">
+  <div class="ph">
+    <div><div class="ph-title">Günlük Harcamalar</div><div class="ph-sub" id="dailySub">Bu ay: ₺0</div></div>
+  </div>
+  <div class="chips" id="dailyChips">
+    <div class="chip active" onclick="filterDaily('all',this)">Tümü</div>
+    <div class="chip" onclick="filterDaily('today',this)">Bugün</div>
+    <div class="chip" onclick="filterDaily('week',this)">Bu Hafta</div>
+    <div class="chip" onclick="filterDaily('month',this)">Bu Ay</div>
+  </div>
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--orange)"></div>Harcamalar</div><button class="sh-btn" style="color:var(--red)" onclick="clearDaily()">Tümünü Sil</button></div>
+  <div id="dailyList"></div>
+</div>
+
+<!-- === REMINDERS === -->
+<div class="screen" id="sc-reminders">
+  <div class="ph"><div><div class="ph-title">Hatırlatmalar</div><div class="ph-sub">Ödeme takibi</div></div></div>
+  <div class="chips" id="remChips">
+    <div class="chip active" onclick="filterRem('all',this)">Tümü</div>
+    <div class="chip" onclick="filterRem('pending',this)">⏳ Bekleyen</div>
+    <div class="chip" onclick="filterRem('done',this)">✅ Ödendi</div>
+  </div>
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--yellow)"></div>Hatırlatmalar</div><button class="sh-btn" style="color:var(--red)" onclick="clearRem()">Tümünü Sil</button></div>
+  <div id="remList"></div>
+</div>
+
+<!-- === BUDGET === -->
+<div class="screen" id="sc-budget">
+  <div class="ph"><div><div class="ph-title">Bütçe & Analiz</div><div class="ph-sub">Limit ve harcama dağılımı</div></div></div>
+  <div class="blc">
+    <div class="blc-title">💡 Aylık Bütçe Limiti</div>
+    <div class="blc-row">
+      <input class="blc-input" type="number" inputmode="numeric" id="budgetIn" placeholder="₺ Limit girin...">
+      <button class="blc-save" onclick="saveBudget()">Kaydet</button>
+    </div>
+  </div>
+  <div class="card" id="budgetBig">
+    <div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Harcanan</div>
+    <div style="font-size:30px;font-weight:800;margin-top:4px" id="bSpent">₺0</div>
+    <div class="prog-bar"><div class="prog-fill" id="bFill" style="width:0%;background:var(--accent)"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2)">
+      <span>₺0</span><span id="bPct">0%</span><span id="bLim">₺0</span>
+    </div>
+    <div class="g2">
+      <div class="ms"><div class="ms-lbl">Limit</div><div class="ms-val" style="color:var(--blue)" id="bsLim">₺0</div></div>
+      <div class="ms"><div class="ms-lbl">Kalan</div><div class="ms-val" id="bsRem">₺0</div></div>
+      <div class="ms"><div class="ms-lbl">Gelir</div><div class="ms-val" style="color:var(--accent)" id="bsIn">₺0</div></div>
+      <div class="ms"><div class="ms-lbl">Toplam Borç</div><div class="ms-val" style="color:var(--purple)" id="bsDebt">₺0</div></div>
+    </div>
+  </div>
+  <!-- category breakdown -->
+  <div class="sh"><div class="sh-title"><div class="sh-dot" style="background:var(--accent)"></div>Harcama Kategorileri</div></div>
+  <div id="catGrid" style="padding:0 18px;display:flex;flex-direction:column;gap:9px"></div>
+  <div style="height:8px"></div>
+</div>
+
+<!-- === KİŞİSEL BORÇLAR === -->
+<div class="screen" id="sc-personal">
+  <div class="ph">
+    <div><div class="ph-title">Kişisel Borçlar</div><div class="ph-sub" id="personalSub">Toplam: ₺0</div></div>
+  </div>
+  <div class="chips" id="personalChips">
+    <div class="chip active" onclick="filterPersonal('all',this)">Tümü</div>
+    <div class="chip" onclick="filterPersonal('bende',this)">👆 Bende Olan</div>
+    <div class="chip" onclick="filterPersonal('onda',this)">👇 Onda Olan</div>
+    <div class="chip" onclick="filterPersonal('done',this)">✅ Kapandı</div>
+  </div>
+  <div class="sh">
+    <div class="sh-title"><div class="sh-dot" style="background:var(--orange)"></div>Borç Listesi</div>
+    <button class="sh-btn" style="color:var(--red)" onclick="clearPersonal()">Tümünü Sil</button>
+  </div>
+  <div id="personalList"></div>
+</div>
+
+<!-- === NOTLAR === -->
+<div class="screen" id="sc-notes">
+  <div class="ph">
+    <div><div class="ph-title">Notlar 📝</div><div class="ph-sub" id="notesSub">0 not</div></div>
+  </div>
+  <div class="chips" id="notesChips">
+    <div class="chip active" onclick="filterNotes('all',this)">Tümü</div>
+    <div class="chip" onclick="filterNotes('📌 Önemli',this)">📌 Önemli</div>
+    <div class="chip" onclick="filterNotes('💡 Fikir',this)">💡 Fikir</div>
+    <div class="chip" onclick="filterNotes('📋 Genel',this)">📋 Genel</div>
+    <div class="chip" onclick="filterNotes('🛒 Liste',this)">🛒 Liste</div>
+  </div>
+  <div class="sh">
+    <div class="sh-title"><div class="sh-dot" style="background:var(--accent)"></div>Notlarım</div>
+    <button class="sh-btn" style="color:var(--red)" onclick="clearNotes()">Tümünü Sil</button>
+  </div>
+  <div id="notesList"></div>
+</div>
+
+<!-- === BOTTOM NAV === -->
+<nav class="bnav">
+  <button class="ni active" id="nav-home" onclick="goTo('home')"><div class="ni-icon">🏠</div><div class="ni-lbl">Ana Sayfa</div></button>
+  <button class="ni" id="nav-loans" onclick="goTo('loans')"><div class="ni-icon">🏦</div><div class="ni-lbl">Krediler</div></button>
+  <button class="ni" id="nav-personal" onclick="goTo('personal')"><div class="ni-icon">🤝</div><div class="ni-lbl">Borçlar</div></button>
+  <button class="ni" id="nav-daily" onclick="goTo('daily')"><div class="ni-icon">🧾</div><div class="ni-lbl">Harcama</div></button>
+  <button class="ni" id="nav-notes" onclick="goTo('notes')"><div class="ni-icon">📝</div><div class="ni-lbl">Notlar</div></button>
+</nav>
+<button class="fab" id="fab" onclick="fabAction()">＋</button>
+</div>
+
+<!-- ==============================═ SHEETS ==============================═ -->
+
+<!-- SHEET: Daily Expense -->
+<div class="overlay" id="shDaily" onclick="closeSheet('shDaily',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">🧾 Günlük Harcama Ekle</div>
+  <div class="fs"><label class="fl">Açıklama</label><input class="fi" type="text" id="dName" placeholder="Kahve, taksi, market..."></div>
+  <div class="fs"><label class="fl">Tutar (₺)</label><input class="fi" type="number" inputmode="decimal" id="dAmt" placeholder="0"></div>
+  <div class="form2">
+    <div><label class="fl">Kategori</label>
+      <select class="fi" id="dCat">
+        <option value="☕ Kahve/Çay">☕ Kahve/Çay</option>
+        <option value="🍽️ Yemek">🍽️ Yemek</option>
+        <option value="🛒 Market">🛒 Market</option>
+        <option value="🚗 Ulaşım">🚗 Ulaşım</option>
+        <option value="🎉 Eğlence">🎉 Eğlence</option>
+        <option value="💊 Sağlık">💊 Sağlık</option>
+        <option value="👗 Giyim">👗 Giyim</option>
+        <option value="📦 Diğer">📦 Diğer</option>
+      </select>
+    </div>
+    <div><label class="fl">Tarih</label><input class="fi" type="date" id="dDate"></div>
+  </div>
+  <button class="sub-btn sub-yellow" onclick="addDaily()">✓ Harcama Ekle</button>
+</div></div>
+
+<!-- SHEET: Add Loan -->
+<div class="overlay" id="shLoan" onclick="closeSheet('shLoan',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">🏦 Kredi Ekle</div>
+  <div class="fs"><label class="fl">Kredi Adı / Banka</label><input class="fi" type="text" id="lName" placeholder="Akbank ihtiyaç kredisi..."></div>
+  <div class="form2">
+    <div><label class="fl">Toplam Tutar (₺)</label><input class="fi" type="number" inputmode="decimal" id="lTotal" placeholder="100000"></div>
+    <div><label class="fl">Aylık Taksit (₺)</label><input class="fi" type="number" inputmode="decimal" id="lMonth" placeholder="2500"></div>
+  </div>
+  <div class="form2">
+    <div><label class="fl">Toplam Taksit</label><input class="fi" type="number" inputmode="numeric" id="lTaksit" placeholder="48"></div>
+    <div><label class="fl">Ödenen Taksit</label><input class="fi" type="number" inputmode="numeric" id="lPaid" placeholder="0"></div>
+  </div>
+  <div class="form2">
+    <div><label class="fl">Son Ödeme Günü</label><input class="fi" type="number" inputmode="numeric" id="lDueDay" placeholder="15" min="1" max="31"></div>
+    <div><label class="fl">Faiz Oranı (%)</label><input class="fi" type="number" inputmode="decimal" id="lRate" placeholder="3.5"></div>
+  </div>
+  <button class="sub-btn sub-blue" onclick="addLoan()">✓ Kredi Ekle</button>
+</div></div>
+
+<!-- SHEET: Add Credit Card -->
+<div class="overlay" id="shCC" onclick="closeSheet('shCC',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">💳 Kredi Kartı Ekle</div>
+  <div class="fs"><label class="fl">Kart Adı / Banka</label><input class="fi" type="text" id="ccName" placeholder="Garanti Bonus, İş Bankası..."></div>
+  <div class="form2">
+    <div><label class="fl">Kart Limiti (₺)</label><input class="fi" type="number" inputmode="decimal" id="ccLimit" placeholder="30000"></div>
+    <div><label class="fl">Mevcut Borç (₺)</label><input class="fi" type="number" inputmode="decimal" id="ccDebt" placeholder="5000"></div>
+  </div>
+  <div class="form2">
+    <div><label class="fl">Asgari Ödeme (₺)</label><input class="fi" type="number" inputmode="decimal" id="ccMin" placeholder="500"></div>
+    <div><label class="fl">Son Ödeme Günü</label><input class="fi" type="number" inputmode="numeric" id="ccDueDay" placeholder="20" min="1" max="31"></div>
+  </div>
+  <button class="sub-btn sub-purple" onclick="addCC()">✓ Kredi Kartı Ekle</button>
+</div></div>
+
+<!-- SHEET: Add Reminder -->
+<div class="overlay" id="shRem" onclick="closeSheet('shRem',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">🔔 Hatırlatma Ekle</div>
+  <div class="fs"><label class="fl">Başlık</label><input class="fi" type="text" id="rTitle" placeholder="Kira, elektrik, sigorta..."></div>
+  <div class="form2">
+    <div><label class="fl">Tutar (₺)</label><input class="fi" type="number" inputmode="decimal" id="rAmt" placeholder="0"></div>
+    <div><label class="fl">Son Tarih</label><input class="fi" type="date" id="rDate"></div>
+  </div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Kategori</label>
+    <select class="fi" id="rType">
+      <option value="🏠 Kira">🏠 Kira</option>
+      <option value="⚡ Elektrik">⚡ Elektrik</option>
+      <option value="💧 Su">💧 Su</option>
+      <option value="🔥 Doğalgaz">🔥 Doğalgaz</option>
+      <option value="📱 Telefon">📱 Telefon</option>
+      <option value="🌐 İnternet">🌐 İnternet</option>
+      <option value="🚗 Sigorta">🚗 Sigorta</option>
+      <option value="📦 Diğer">📦 Diğer</option>
+    </select>
+  </div>
+  <button class="sub-btn sub-yellow" onclick="addRem()">🔔 Ekle</button>
+</div></div>
+
+<!-- SHEET: Loan Payment -->
+<div class="overlay" id="shLoanPay" onclick="closeSheet('shLoanPay',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title" id="loanPayTitle">Taksit Öde</div>
+  <div class="fs"><div style="background:var(--surface2);border-radius:13px;padding:14px;margin-bottom:4px">
+    <div style="font-size:11px;color:var(--text2);font-weight:700">ÖDENECEK TAKSİT</div>
+    <div style="font-size:24px;font-weight:800;color:var(--blue);margin-top:4px" id="loanPayAmt">₺0</div>
+    <div style="font-size:11px;color:var(--text2);margin-top:4px" id="loanPayInfo"></div>
+  </div></div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Ödeme Tutarı (₺)</label><input class="fi" type="number" inputmode="decimal" id="lPayAmt" placeholder="Taksit tutarı..."></div>
+  <button class="sub-btn sub-blue" onclick="confirmLoanPay()">✓ Ödemeyi Kaydet</button>
+</div></div>
+
+<!-- SHEET: CC Payment -->
+<div class="overlay" id="shCCPay" onclick="closeSheet('shCCPay',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title" id="ccPayTitle">Kredi Kartı Öde</div>
+  <div class="fs"><div style="background:var(--surface2);border-radius:13px;padding:14px">
+    <div style="font-size:11px;color:var(--text2);font-weight:700">MEVCUT BORÇ</div>
+    <div style="font-size:24px;font-weight:800;color:var(--purple);margin-top:4px" id="ccPayDebt">₺0</div>
+  </div></div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Ödeme Tutarı (₺)</label><input class="fi" type="number" inputmode="decimal" id="ccPayAmt" placeholder="0"></div>
+  <div style="padding:10px 22px 0;display:flex;gap:8px">
+    <button class="cc-pay-btn cc-pay-min" id="ccMinBtn" onclick="setCCPay('min')" style="flex:1;padding:10px;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Asgari Ödeme</button>
+    <button class="cc-pay-btn cc-pay-full" id="ccFullBtn" onclick="setCCPay('full')" style="flex:1;padding:10px;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">Tamamını Öde</button>
+  </div>
+  <button class="sub-btn sub-purple" onclick="confirmCCPay()">✓ Ödemeyi Kaydet</button>
+</div></div>
+
+<!-- SHEET: Personal Debt -->
+<div class="overlay" id="shPersonal" onclick="closeSheet('shPersonal',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">🤝 Kişisel Borç Ekle</div>
+  <div class="fs"><label class="fl">Kişi Adı</label><input class="fi" type="text" id="pName" placeholder="Ali, Ayşe, Ahmet..."></div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Borç Türü</label>
+    <div class="tt">
+      <button class="ttb sel-e" id="pTypeBende" onclick="setPType('bende')">👆 Bende (Ben borçluyum)</button>
+      <button class="ttb" id="pTypeOnda" onclick="setPType('onda')">👇 Onda (O borçlu)</button>
+    </div>
+  </div>
+  <div class="form2">
+    <div><label class="fl">Tutar (₺)</label><input class="fi" type="number" inputmode="decimal" id="pAmt" placeholder="0"></div>
+    <div><label class="fl">Son Ödeme Tarihi</label><input class="fi" type="date" id="pDate"></div>
+  </div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Not (isteğe bağlı)</label><input class="fi" type="text" id="pNote" placeholder="Borç nedeni, anlaşma detayı..."></div>
+  <button class="sub-btn sub-orange" onclick="addPersonal()" style="background:var(--orange);color:#080a0f">✓ Borç Ekle</button>
+</div></div>
+
+<!-- SHEET: Note -->
+<div class="overlay" id="shNote" onclick="closeSheet('shNote',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title" id="noteSheetTitle">📝 Not Ekle</div>
+  <div class="fs"><label class="fl">Başlık</label><input class="fi" type="text" id="nTitle" placeholder="Notun başlığı..."></div>
+  <div class="fs" style="margin-top:14px"><label class="fl">İçerik</label>
+    <textarea class="fi" id="nContent" placeholder="Notunuzu buraya yazın..." rows="5" style="resize:none;line-height:1.6"></textarea>
+  </div>
+  <div class="fs" style="margin-top:14px"><label class="fl">Kategori</label>
+    <select class="fi" id="nCat">
+      <option value="📋 Genel">📋 Genel</option>
+      <option value="📌 Önemli">📌 Önemli</option>
+      <option value="💡 Fikir">💡 Fikir</option>
+      <option value="🛒 Liste">🛒 Liste</option>
+      <option value="💰 Finans">💰 Finans</option>
+    </select>
+  </div>
+  <input type="hidden" id="nEditId">
+  <button class="sub-btn sub-green" onclick="saveNote()" style="background:var(--accent);color:#080a0f">✓ Notu Kaydet</button>
+</div></div>
+
+<!-- FAB MENU -->
+<div class="overlay" id="fabMenu" onclick="closeSheet('fabMenu',event)">
+<div class="sheet">
+  <div class="sh-handle"></div>
+  <div class="sh-title">Ne eklemek istersiniz?</div>
+  <div style="display:flex;flex-direction:column;gap:10px;padding:18px 22px">
+    <button onclick="openSpecific('shDaily')" style="display:flex;align-items:center;gap:12px;background:var(--orange-dim);border:1.5px solid var(--orange);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--orange)">
+      <span style="font-size:22px">🧾</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Günlük Harcama</div><div style="font-size:11px;opacity:.7;margin-top:2px">Kahve, taksi, market...</div></div>
+    </button>
+    <button onclick="openSpecific('shPersonal')" style="display:flex;align-items:center;gap:12px;background:rgba(251,146,60,0.1);border:1.5px solid var(--orange);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--orange)">
+      <span style="font-size:22px">🤝</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Kişisel Borç</div><div style="font-size:11px;opacity:.7;margin-top:2px">Kişilere olan borçlar</div></div>
+    </button>
+    <button onclick="openSpecific('shLoan')" style="display:flex;align-items:center;gap:12px;background:var(--blue-dim);border:1.5px solid var(--blue);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--blue)">
+      <span style="font-size:22px">🏦</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Kredi Ekle</div><div style="font-size:11px;opacity:.7;margin-top:2px">İhtiyaç, konut, taşıt kredisi</div></div>
+    </button>
+    <button onclick="openSpecific('shCC')" style="display:flex;align-items:center;gap:12px;background:var(--purple-dim);border:1.5px solid var(--purple);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--purple)">
+      <span style="font-size:22px">💳</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Kredi Kartı Ekle</div><div style="font-size:11px;opacity:.7;margin-top:2px">Borç ve limit takibi</div></div>
+    </button>
+    <button onclick="openSpecific('shRem')" style="display:flex;align-items:center;gap:12px;background:var(--yellow-dim);border:1.5px solid var(--yellow);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--yellow)">
+      <span style="font-size:22px">🔔</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Hatırlatma Ekle</div><div style="font-size:11px;opacity:.7;margin-top:2px">Kira, fatura, son ödeme</div></div>
+    </button>
+    <button onclick="openSpecific('shNote')" style="display:flex;align-items:center;gap:12px;background:rgba(74,222,128,0.08);border:1.5px solid var(--accent);border-radius:14px;padding:15px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--accent)">
+      <span style="font-size:22px">📝</span><div style="text-align:left"><div style="font-size:14px;font-weight:700">Not Ekle</div><div style="font-size:11px;opacity:.7;margin-top:2px">Fikir, hatırlatma, liste...</div></div>
+    </button>
+  </div>
+</div></div>
+
+<script>
+// === STATE ===
+const S = {
+  loans:    JSON.parse(localStorage.getItem('bp_loans')||'[]'),
+  ccs:      JSON.parse(localStorage.getItem('bp_ccs')||'[]'),
+  daily:    JSON.parse(localStorage.getItem('bp_daily')||'[]'),
+  rems:     JSON.parse(localStorage.getItem('bp_rems')||'[]'),
+  personal: JSON.parse(localStorage.getItem('bp_personal')||'[]'),
+  notes:    JSON.parse(localStorage.getItem('bp_notes')||'[]'),
+  budget: parseFloat(localStorage.getItem('bp_budget')||'0'),
+  loanFilter:'all', dailyFilter:'all', remFilter:'all',
+  personalFilter:'all', notesFilter:'all',
+  activeLoanId: null, activeCCId: null,
+  pType: 'bende'
+};
+
+const save = ()=>{
+  localStorage.setItem('bp_loans',    JSON.stringify(S.loans));
+  localStorage.setItem('bp_ccs',      JSON.stringify(S.ccs));
+  localStorage.setItem('bp_daily',    JSON.stringify(S.daily));
+  localStorage.setItem('bp_rems',     JSON.stringify(S.rems));
+  localStorage.setItem('bp_personal', JSON.stringify(S.personal));
+  localStorage.setItem('bp_notes',    JSON.stringify(S.notes));
+  localStorage.setItem('bp_budget',   S.budget);
+};
+
+const fmt = n => '₺'+(parseFloat(n)||0).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:0});
+const today = ()=>new Date().toISOString().split('T')[0];
+const dateStr = (d,opts)=>new Date(d).toLocaleDateString('tr-TR',opts||{day:'numeric',month:'short'});
+
+let toastTimer;
+function toast(msg, type='green'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type;
+  clearTimeout(toastTimer);
+  setTimeout(()=>el.classList.add('show'), 10);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 2500);
+}
+
+// === INIT ===
+window.onload = ()=>{
+  document.getElementById('dDate').value = today();
+  document.getElementById('rDate').value = today();
+  document.getElementById('pDate').value = today();
+  document.getElementById('homeDate').textContent = new Date().toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('budgetIn').value = S.budget||'';
+  setPType('bende');
+  render(); checkNotif();
+};
+
+// === NAVIGATION ===
+function goTo(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sc-'+tab).classList.add('active');
+  const ni = document.getElementById('nav-'+tab);
+  if(ni) ni.classList.add('active');
+  S.currentTab = tab;
+  const fab = document.getElementById('fab');
+  fab.style.display = 'flex';
+  render();
+}
+
+// === SHEETS ===
+function fabAction(){ openSheet('fabMenu'); }
+function openSheet(id){ document.getElementById(id).classList.add('open'); }
+function closeSheet(id,e){ if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove('open'); }
+function openSpecific(id){
+  document.getElementById('fabMenu').classList.remove('open');
+  setTimeout(()=>openSheet(id),150);
+}
+function closeAll(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); }
+
+// === ADD DAILY ===
+function addDaily(){
+  const name=document.getElementById('dName').value.trim();
+  const amt=parseFloat(document.getElementById('dAmt').value);
+  const cat=document.getElementById('dCat').value;
+  const date=document.getElementById('dDate').value;
+  if(!name||!amt){alert('Ad ve tutar zorunlu!');return;}
+  S.daily.unshift({id:Date.now(),name,amount:amt,category:cat,date});
+  save(); render(); closeAll(); toast('✅ Harcama eklendi!');
+  document.getElementById('dName').value='';
+  document.getElementById('dAmt').value='';
+}
+
+// === ADD LOAN ===
+function addLoan(){
+  const name=document.getElementById('lName').value.trim();
+  const total=parseFloat(document.getElementById('lTotal').value);
+  const monthly=parseFloat(document.getElementById('lMonth').value);
+  const taksit=parseInt(document.getElementById('lTaksit').value);
+  const paid=parseInt(document.getElementById('lPaid').value)||0;
+  const dueDay=parseInt(document.getElementById('lDueDay').value)||15;
+  const rate=parseFloat(document.getElementById('lRate').value)||0;
+  if(!name||!total||!monthly||!taksit){alert('Zorunlu alanları doldurun!');return;}
+  const remaining = total - (paid * monthly);
+  S.loans.push({id:Date.now(),name,total,monthly,taksit,paid,dueDay,rate,remaining:Math.max(0,remaining)});
+  save(); render(); closeAll(); toast('🏦 Kredi eklendi!', 'blue');
+  ['lName','lTotal','lMonth','lTaksit','lPaid','lDueDay','lRate'].forEach(id=>document.getElementById(id).value='');
+}
+
+// === ADD CC ===
+function addCC(){
+  const name=document.getElementById('ccName').value.trim();
+  const limit=parseFloat(document.getElementById('ccLimit').value);
+  const debt=parseFloat(document.getElementById('ccDebt').value)||0;
+  const minPay=parseFloat(document.getElementById('ccMin').value)||0;
+  const dueDay=parseInt(document.getElementById('ccDueDay').value)||20;
+  if(!name||!limit){alert('Kart adı ve limiti zorunlu!');return;}
+  S.ccs.push({id:Date.now(),name,limit,debt,minPay,dueDay});
+  save(); render(); closeAll(); toast('💳 Kredi kartı eklendi!', 'blue');
+  ['ccName','ccLimit','ccDebt','ccMin','ccDueDay'].forEach(id=>document.getElementById(id).value='');
+}
+
+// === ADD REMINDER ===
+function addRem(){
+  const title=document.getElementById('rTitle').value.trim();
+  const amt=parseFloat(document.getElementById('rAmt').value)||0;
+  const date=document.getElementById('rDate').value;
+  const type=document.getElementById('rType').value;
+  if(!title||!date){alert('Başlık ve tarih zorunlu!');return;}
+  S.rems.unshift({id:Date.now(),title,amount:amt,date,type,done:false});
+  save(); render(); closeAll(); checkNotif(); toast('🔔 Hatırlatma eklendi!', 'yellow');
+  document.getElementById('rTitle').value='';
+  document.getElementById('rAmt').value='';
+}
+
+// === LOAN PAYMENT ===
+function openLoanPay(id){
+  const l=S.loans.find(l=>l.id===id);
+  if(!l)return;
+  S.activeLoanId=id;
+  document.getElementById('loanPayTitle').textContent=`${l.name} — Taksit Öde`;
+  document.getElementById('loanPayAmt').textContent=fmt(l.monthly);
+  const rem=l.taksit-l.paid;
+  document.getElementById('loanPayInfo').textContent=`${rem} taksit kaldı · Kalan borç: ${fmt(l.remaining)}`;
+  document.getElementById('lPayAmt').value=l.monthly;
+  openSheet('shLoanPay');
+}
+function confirmLoanPay(){
+  const l=S.loans.find(l=>l.id===S.activeLoanId);
+  if(!l)return;
+  const amt=parseFloat(document.getElementById('lPayAmt').value)||l.monthly;
+  l.paid=Math.min(l.taksit, l.paid+1);
+  l.remaining=Math.max(0, l.remaining-amt);
+  S.daily.unshift({id:Date.now(),name:`${l.name} taksit`,amount:amt,category:'🏦 Kredi Taksidi',date:today()});
+  save(); render(); closeAll(); checkNotif(); toast('💰 Taksit ödendi!', 'blue');
+  document.getElementById('lPayAmt').value='';
+}
+
+// === CC PAYMENT ===
+function openCCPay(id){
+  const c=S.ccs.find(c=>c.id===id);
+  if(!c)return;
+  S.activeCCId=id;
+  document.getElementById('ccPayTitle').textContent=`${c.name} — Ödeme Yap`;
+  document.getElementById('ccPayDebt').textContent=fmt(c.debt);
+  document.getElementById('ccPayAmt').value='';
+  openSheet('shCCPay');
+}
+function setCCPay(type){
+  const c=S.ccs.find(c=>c.id===S.activeCCId);
+  if(!c)return;
+  document.getElementById('ccPayAmt').value=type==='min'?c.minPay:c.debt;
+}
+function confirmCCPay(){
+  const c=S.ccs.find(c=>c.id===S.activeCCId);
+  if(!c)return;
+  const amt=parseFloat(document.getElementById('ccPayAmt').value)||0;
+  if(amt<=0){alert('Geçerli tutar girin!');return;}
+  c.debt=Math.max(0,c.debt-amt);
+  S.daily.unshift({id:Date.now(),name:`${c.name} kredi karti odemesi`,amount:amt,category:'💳 Kredi Kartı',date:today()});
+  save(); render(); closeAll(); toast('💳 Ödeme kaydedildi!', 'blue');
+}
+
+// === DELETE ===
+function deleteLoan(id){if(confirm('Kredi silinsin mi?')){S.loans=S.loans.filter(l=>l.id!==id);save();render();toast('🗑️ Kredi silindi','red');}}
+function deleteCC(id){if(confirm('Kredi karti silinsin mi?')){S.ccs=S.ccs.filter(c=>c.id!==id);save();render();toast('🗑️ Kredi karti silindi','red');}}
+function deleteDaily(id){S.daily=S.daily.filter(d=>d.id!==id);save();render();toast('🗑️ Harcama silindi','red');}
+function deleteRem(id){S.rems=S.rems.filter(r=>r.id!==id);save();render();checkNotif();toast('🗑️ Hatirlatma silindi','red');}
+function toggleRem(id){const r=S.rems.find(r=>r.id===id);if(r){r.done=!r.done;save();render();checkNotif();toast(r.done?'✅ Ödendi olarak isaretlendi!':'↩️ Geri alindi','yellow');}}
+function clearLoans(){if(confirm('Tüm krediler ve kartlar silinsin mi?')){S.loans=[];S.ccs=[];save();render();}}
+function clearDaily(){if(confirm('Tüm harcamalar silinsin mi?')){S.daily=[];save();render();}}
+function clearRem(){if(confirm('Tüm hatırlatmalar silinsin mi?')){S.rems=[];save();render();}}
+
+// === FILTERS ===
+function filterLoans(f,el){S.loanFilter=f;document.querySelectorAll('#loanChips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderLoans();}
+function filterDaily(f,el){S.dailyFilter=f;document.querySelectorAll('#dailyChips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderDaily();}
+function filterRem(f,el){S.remFilter=f;document.querySelectorAll('#remChips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderRems();}
+
+// === BUDGET ===
+function saveBudget(){
+  S.budget=parseFloat(document.getElementById('budgetIn').value)||0;
+  save();render();
+  const b=document.querySelector('.blc-save');
+  b.textContent='✅';setTimeout(()=>b.textContent='Kaydet',1500);
+}
+
+// === URGENCY ===
+function urgency(date,done){
+  if(done)return{cls:'',dot:'#475569'};
+  const diff=(new Date(date)-new Date())/86400000;
+  if(diff<0)return{cls:'urgent',dot:'var(--red)',tag:'Geçti!'};
+  if(diff<=2)return{cls:'urgent',dot:'var(--red)',tag:'Acil'};
+  if(diff<=7)return{cls:'soon',dot:'var(--yellow)',tag:'Yakında'};
+  return{cls:'',dot:'var(--accent)',tag:Math.ceil(diff)+' gün'};
+}
+
+// === NOTIF ===
+function checkNotif(){
+  const bar=document.getElementById('notifBar');
+  const td=today();
+  const urgRem=S.rems.filter(r=>!r.done&&r.date<=td);
+  const urgLoan=S.loans.filter(l=>{
+    const now=new Date(); const due=new Date(now.getFullYear(),now.getMonth(),l.dueDay);
+    return l.paid<l.taksit && (due-now)/86400000<=3;
+  });
+  const msgs=[];
+  if(urgRem.length) msgs.push(`🔔 ${urgRem.length} bekleyen ödeme: ${urgRem.map(r=>r.title).join(', ')}`);
+  if(urgLoan.length) msgs.push(`🏦 ${urgLoan.length} kredi taksidi yaklaşıyor: ${urgLoan.map(l=>l.name).join(', ')}`);
+  const urgCC=S.ccs.filter(c=>{
+    const now=new Date(); const due=new Date(now.getFullYear(),now.getMonth(),c.dueDay);
+    return c.debt>0 && (due-now)/86400000<=3;
+  });
+  if(urgCC.length) msgs.push(`💳 ${urgCC.length} kredi kartı son ödeme tarihi yakın`);
+  if(msgs.length){bar.innerHTML=msgs.join('<br>');bar.classList.add('show');}
+  else bar.classList.remove('show');
+}
+
+// === DUE DATE ===
+function dueInfo(dueDay){
+  const now=new Date();
+  const thisMonth=new Date(now.getFullYear(),now.getMonth(),dueDay);
+  const nextMonth=new Date(now.getFullYear(),now.getMonth()+1,dueDay);
+  const target=thisMonth<now?nextMonth:thisMonth;
+  const diff=Math.ceil((target-now)/86400000);
+  return{date:target.toLocaleDateString('tr-TR',{day:'numeric',month:'long'}),diff};
+}
+
+// === PERSONAL DEBT TYPE ===
+function setPType(t){
+  S.pType=t;
+  document.getElementById('pTypeBende').className='ttb'+(t==='bende'?' sel-e':'');
+  document.getElementById('pTypeOnda').className='ttb'+(t==='onda'?' sel-i':'');
+}
+
+// === ADD PERSONAL DEBT ===
+function addPersonal(){
+  const name=document.getElementById('pName').value.trim();
+  const amt=parseFloat(document.getElementById('pAmt').value);
+  const date=document.getElementById('pDate').value;
+  const note=document.getElementById('pNote').value.trim();
+  if(!name||!amt){alert('Kişi adı ve tutar zorunlu!');return;}
+  S.personal.unshift({id:Date.now(),name,amount:amt,type:S.pType,date,note,done:false});
+  save();render();closeAll(); toast('🤝 Borç eklendi!');
+  document.getElementById('pName').value='';
+  document.getElementById('pAmt').value='';
+  document.getElementById('pNote').value='';
+}
+function togglePersonal(id){
+  const p=S.personal.find(p=>p.id===id);
+  if(p){p.done=!p.done;save();render();toast(p.done?'✅ Borç kapandı!':'↩️ Geri alındı','yellow');}
+}
+function deletePersonal(id){
+  if(confirm('Bu borç silinsin mi?')){S.personal=S.personal.filter(p=>p.id!==id);save();render();toast('🗑️ Borç silindi','red');}
+}
+function clearPersonal(){
+  if(confirm('Tüm kişisel borçlar silinsin mi?')){S.personal=[];save();render();}
+}
+function filterPersonal(f,el){
+  S.personalFilter=f;
+  document.querySelectorAll('#personalChips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderPersonal();
+}
+
+// === NOTES ===
+function saveNote(){
+  const title=document.getElementById('nTitle').value.trim();
+  const content=document.getElementById('nContent').value.trim();
+  const cat=document.getElementById('nCat').value;
+  const editId=document.getElementById('nEditId').value;
+  if(!title&&!content){alert('Başlık veya içerik girin!');return;}
+  if(editId){
+    const n=S.notes.find(n=>n.id===parseInt(editId));
+    if(n){n.title=title;n.content=content;n.cat=cat;n.updated=Date.now();}
+  } else {
+    S.notes.unshift({id:Date.now(),title,content,cat,created:Date.now()});
+  }
+  save();render();closeAll();
+  const isEdit=!!editId;
+  toast(isEdit?'✏️ Not güncellendi!':'📝 Not eklendi!');
+  document.getElementById('nTitle').value='';
+  document.getElementById('nContent').value='';
+  document.getElementById('nEditId').value='';
+}
+function editNote(id){
+  const n=S.notes.find(n=>n.id===id);
+  if(!n)return;
+  document.getElementById('nTitle').value=n.title;
+  document.getElementById('nContent').value=n.content;
+  document.getElementById('nCat').value=n.cat;
+  document.getElementById('nEditId').value=id;
+  document.getElementById('noteSheetTitle').textContent='📝 Notu Düzenle';
+  openSheet('shNote');
+}
+function deleteNote(id){
+  S.notes=S.notes.filter(n=>n.id!==id);save();render();toast('🗑️ Not silindi','red');
+}
+function clearNotes(){
+  if(confirm('Tüm notlar silinsin mi?')){S.notes=[];save();render();}
+}
+function filterNotes(f,el){
+  S.notesFilter=f;
+  document.querySelectorAll('#notesChips .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderNotes();
+}
+
+// === RENDER PERSONAL ===
+function renderPersonal(){
+  let items=S.personal;
+  if(S.personalFilter==='bende') items=items.filter(p=>p.type==='bende'&&!p.done);
+  else if(S.personalFilter==='onda') items=items.filter(p=>p.type==='onda'&&!p.done);
+  else if(S.personalFilter==='done') items=items.filter(p=>p.done);
+  else items=items.filter(p=>!p.done).concat(items.filter(p=>p.done));
+
+  const totalBende=S.personal.filter(p=>p.type==='bende'&&!p.done).reduce((s,p)=>s+p.amount,0);
+  const totalOnda=S.personal.filter(p=>p.type==='onda'&&!p.done).reduce((s,p)=>s+p.amount,0);
+  document.getElementById('personalSub').textContent=`Bende: ${fmt(totalBende)} · Onda: ${fmt(totalOnda)}`;
+
+  const el=document.getElementById('personalList');
+  if(!items.length){el.innerHTML='<div class="empty"><div class="ei">🤝</div><p>Kişisel borç eklenmedi.<br>+ butonundan ekleyebilirsiniz.</p></div>';return;}
+
+  el.innerHTML=items.map(p=>{
+    const isBende=p.type==='bende';
+    const color=p.done?'var(--text2)':isBende?'var(--red)':'var(--accent)';
+    const bg=p.done?'var(--surface2)':isBende?'var(--red-dim)':'var(--accent-dim)';
+    const label=p.done?'✅ Kapandı':isBende?'👆 Ben borçluyum':'👇 O borçlu';
+    const dStr=p.date?`📅 ${new Date(p.date).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}`:'' ;
+    return `<div style="margin:0 18px 10px;background:var(--surface);border:1px solid ${p.done?'var(--border)':isBende?'rgba(248,113,113,0.2)':'rgba(74,222,128,0.2)'};border-radius:14px;padding:16px;${p.done?'opacity:.6':''}animation:fup .25s ease">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:44px;height:44px;border-radius:14px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:20px">${isBende?'😰':'😊'}</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;${p.done?'text-decoration:line-through':''}">${p.name}</div>
+            <div style="font-size:11px;font-weight:700;color:${color};margin-top:2px">${label}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:800;color:${color}">${fmt(p.amount)}</div>
+          ${dStr?`<div style="font-size:10px;color:var(--text2);margin-top:2px">${dStr}</div>`:''}
+        </div>
+      </div>
+      ${p.note?`<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--text3);margin-bottom:10px">💬 ${p.note}</div>`:''}
+      <div style="display:flex;gap:8px">
+        <button onclick="togglePersonal(${p.id})" style="flex:1;padding:9px;border-radius:10px;border:none;background:${p.done?'var(--surface2)':'var(--accent-dim)'};color:${p.done?'var(--text2)':'var(--accent)'};font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">${p.done?'↩️ Geri Al':'✅ Kapandı'}</button>
+        <button onclick="deletePersonal(${p.id})" style="padding:9px 13px;border-radius:10px;border:none;background:var(--red-dim);color:var(--red);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;cursor:pointer">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// === RENDER NOTES ===
+function renderNotes(){
+  let items=S.notes;
+  if(S.notesFilter!=='all') items=items.filter(n=>n.cat===S.notesFilter);
+  document.getElementById('notesSub').textContent=S.notes.length+' not';
+
+  const el=document.getElementById('notesList');
+  if(!items.length){el.innerHTML='<div class="empty"><div class="ei">📝</div><p>Henüz not eklenmedi.<br>+ butonundan ekleyebilirsiniz.</p></div>';return;}
+
+  const catColors={'📌 Önemli':'var(--red)','💡 Fikir':'var(--yellow)','🛒 Liste':'var(--blue)','💰 Finans':'var(--accent)','📋 Genel':'var(--text3)'};
+  el.innerHTML=items.map(n=>{
+    const color=catColors[n.cat]||'var(--text3)';
+    const timeStr=new Date(n.updated||n.created).toLocaleDateString('tr-TR',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const preview=n.content.length>120?n.content.slice(0,120)+'...':n.content;
+    return `<div style="margin:0 18px 12px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ${color};border-radius:14px;padding:16px;animation:fup .25s ease">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:700;color:${color};background:${color}22;padding:2px 8px;border-radius:20px">${n.cat}</span>
+          </div>
+          ${n.title?`<div style="font-size:15px;font-weight:700">${n.title}</div>`:''}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-left:10px">
+          <button onclick="editNote(${n.id})" style="width:30px;height:30px;border-radius:9px;border:none;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:14px">✏️</button>
+          <button onclick="deleteNote(${n.id})" style="width:30px;height:30px;border-radius:9px;border:none;background:var(--red-dim);color:var(--red);cursor:pointer;font-size:14px">✕</button>
+        </div>
+      </div>
+      ${preview?`<div style="font-size:13px;color:var(--text3);line-height:1.6;white-space:pre-wrap">${preview}</div>`:''}
+      <div style="font-size:10px;color:var(--text2);margin-top:8px">🕐 ${timeStr}</div>
+    </div>`;
+  }).join('');
+}
+
+-
+function render(){renderHome();renderLoans();renderDaily();renderRems();renderBudget();renderPersonal();renderNotes();}
+
+// HOME
+function renderHome(){
+  const totalExpense=S.daily.reduce((s,d)=>s+d.amount,0);
+  const totalDebt=[...S.loans.map(l=>l.remaining),...S.ccs.map(c=>c.debt)].reduce((a,b)=>a+b,0);
+  document.getElementById('heroNet').textContent=fmt(totalExpense);
+  document.getElementById('heroIn').textContent=fmt(S.daily.filter(d=>d.date===today()).reduce((s,d)=>s+d.amount,0));
+  document.getElementById('heroEx').textContent=fmt(totalExpense);
+  document.getElementById('heroDebt').textContent=fmt(totalDebt);
+  document.getElementById('heroNet').className='hero-amt neg';
+  document.getElementById('debtBadge').textContent=`${S.loans.length+S.ccs.length} borç`;
+
+  // Budget ring
+  const bc=document.getElementById('budgetCard');
+  if(S.budget>0){
+    bc.style.display='flex';
+    const pct=Math.min(100,totalExpense/S.budget*100);
+    const color=pct>90?'var(--red)':pct>70?'var(--yellow)':'var(--accent)';
+    const fill=document.getElementById('ringFill');
+    fill.style.stroke=color;
+    setTimeout(()=>{fill.style.strokeDashoffset=175.9-(175.9*pct/100);},60);
+    document.getElementById('ringPct').textContent=Math.round(pct)+'%';
+    document.getElementById('ringPct').style.color=color;
+    document.getElementById('budgetSub').textContent='Limit: '+fmt(S.budget);
+    const rem=S.budget-totalExpense;
+    const re=document.getElementById('budgetRem');
+    re.textContent=rem>=0?fmt(rem)+' kaldı':fmt(Math.abs(rem))+' aşıldı!';
+    re.style.color=rem>=0?'var(--accent)':'var(--red)';
+  }else bc.style.display='none';
+
+  // Upcoming reminders (home)
+  const rl=document.getElementById('homeRemList');
+  const upRem=S.rems.filter(r=>!r.done).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,2);
+  rl.innerHTML=upRem.length?upRem.map(r=>remCardHTML(r,false)).join(''):'<div class="empty"><div class="ei">🎉</div><p>Bekleyen ödeme yok</p></div>';
+
+  // Loan summary (home)
+  const ll=document.getElementById('homeLoanList');
+  const allDebts=[
+    ...S.loans.slice(0,2).map(l=>{
+      const di=dueInfo(l.dueDay);
+      return `<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px;margin:0 18px 8px">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--blue-dim);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏦</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${l.name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${l.taksit-l.paid} taksit kaldı · ${di.date}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:800;color:var(--blue)">${fmt(l.monthly)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">/taksit</div>
+        </div>
+      </div>`;
+    }),
+    ...S.ccs.slice(0,1).map(c=>{
+      const di=dueInfo(c.dueDay);
+      const pct=Math.round(c.debt/c.limit*100);
+      return `<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px;margin:0 18px 8px">
+        <div style="width:40px;height:40px;border-radius:12px;background:var(--purple-dim);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">💳</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700">${c.name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">Son ödeme: ${di.date} · %${pct} dolu</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:14px;font-weight:800;color:var(--purple)">${fmt(c.debt)}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">borç</div>
+        </div>
+      </div>`;
+    })
+  ];
+  ll.innerHTML=allDebts.length?allDebts.join(''):'<div class="empty"><div class="ei">🏦</div><p>Kredi / kart eklenmedi.<br>+ butonundan ekleyebilirsiniz.</p></div>';
+
+  // Today's daily
+  const dl=document.getElementById('homeDailyList');
+  const todaySpends=S.daily.filter(d=>d.date===today()).slice(0,3);
+  dl.innerHTML=todaySpends.length?`<div class="tx-list" style="margin-bottom:4px">${todaySpends.map(d=>dailyRowHTML(d,false)).join('')}</div>`:'<div class="empty"><div class="ei">🧾</div><p>Bugün harcama girilmedi</p></div>';
+}
+
+// LOANS
+function renderLoans(){
+  let loans=S.loanFilter==='cc'?[]:S.loans;
+  let ccs=S.loanFilter==='loan'?[]:S.ccs;
+  const totalDebt=[...S.loans.map(l=>l.remaining),...S.ccs.map(c=>c.debt)].reduce((a,b)=>a+b,0);
+  document.getElementById('loanSub').textContent='Toplam borç: '+fmt(totalDebt);
+  const el=document.getElementById('loanList');
+  const loansHTML=loans.map(l=>{
+    const paidAmt=l.total-l.remaining;
+    const pct=Math.min(100,Math.round(paidAmt/l.total*100));
+    const rem=l.taksit-l.paid;
+    const di=dueInfo(l.dueDay);
+    const color=rem<=3?'var(--red)':rem<=6?'var(--yellow)':'var(--accent)';
+    return `<div class="loan-card">
+      <div class="loan-header">
+        <div class="loan-icon-name">
+          <div class="loan-ico" style="background:var(--blue-dim)">🏦</div>
+          <div><div class="loan-name">${l.name}</div><div class="loan-bank">Son ödeme: her ayın ${l.dueDay}. günü</div></div>
+        </div>
+        <div class="loan-total"><div class="loan-total-lbl">KALAN BORÇ</div><div class="loan-total-val" style="color:var(--blue)">${fmt(l.remaining)}</div></div>
+      </div>
+      <div class="loan-progress"><div class="loan-prog-fill" style="width:${pct}%;background:var(--accent)"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:10px">
+        <span>Ödenen: ${fmt(paidAmt)}</span><span>%${pct} tamamlandı</span><span>Toplam: ${fmt(l.total)}</span>
+      </div>
+      <div class="loan-stats">
+        <div class="loan-stat"><div class="loan-stat-lbl">TAKSİT</div><div class="loan-stat-val" style="color:var(--blue)">${fmt(l.monthly)}</div></div>
+        <div class="loan-stat"><div class="loan-stat-lbl">KALAN</div><div class="loan-stat-val" style="color:${color}">${rem}</div></div>
+        <div class="loan-stat"><div class="loan-stat-lbl">ÖDENEN</div><div class="loan-stat-val">${l.paid}</div></div>
+        <div class="loan-stat"><div class="loan-stat-lbl">SON ÖDEME</div><div class="loan-stat-val" style="color:${di.diff<=3?'var(--red)':di.diff<=7?'var(--yellow)':'var(--text)'}">${di.diff}g</div></div>
+      </div>
+      <div class="loan-actions">
+        <button class="loan-pay-btn" onclick="openLoanPay(${l.id})">💰 Taksit Öde (${fmt(l.monthly)})</button>
+        <button class="loan-del-btn" onclick="deleteLoan(${l.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const ccsHTML=ccs.map(c=>{
+    const usedPct=Math.min(100,Math.round(c.debt/c.limit*100));
+    const avail=c.limit-c.debt;
+    const di=dueInfo(c.dueDay);
+    const debtColor=usedPct>80?'var(--red)':usedPct>60?'var(--yellow)':'var(--purple)';
+    const dueColor=di.diff<=3?'var(--red)':di.diff<=7?'var(--yellow)':'var(--text)';
+    return `<div class="cc-card">
+      <div class="cc-header">
+        <div class="loan-icon-name">
+          <div class="loan-ico" style="background:var(--purple-dim)">💳</div>
+          <div><div class="loan-name">${c.name}</div><div class="loan-bank">Limit: ${fmt(c.limit)}</div></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:10px;color:var(--text2);font-weight:700">KULLANIM</div>
+          <div style="font-size:16px;font-weight:800;color:${debtColor};margin-top:2px">%${usedPct}</div>
+        </div>
+      </div>
+      <div class="loan-progress"><div class="loan-prog-fill" style="width:${usedPct}%;background:${debtColor}"></div></div>
+      <div class="cc-stats">
+        <div class="cc-stat"><div class="cc-stat-lbl">MEVCUT BORÇ</div><div class="cc-stat-val" style="color:${debtColor}">${fmt(c.debt)}</div></div>
+        <div class="cc-stat"><div class="cc-stat-lbl">KULLANILABİLİR</div><div class="cc-stat-val" style="color:var(--accent)">${fmt(avail)}</div></div>
+      </div>
+      <div class="cc-due-bar">
+        <div>
+          <div class="cc-due-lbl">Son Ödeme Tarihi</div>
+          <div style="font-size:12px;font-weight:700;margin-top:2px;color:${dueColor}">📅 ${di.date} (${di.diff} gün kaldı)</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cc-due-lbl">Asgari</div>
+          <div style="font-size:13px;font-weight:800;color:var(--yellow)">${fmt(c.minPay)}</div>
+        </div>
+      </div>
+      <div class="cc-actions">
+        <button class="cc-pay-btn cc-pay-min" style="flex:1;padding:10px;border:none;border-radius:11px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer" onclick="openCCPay(${c.id})">💳 Ödeme Yap</button>
+        <button class="loan-del-btn" onclick="deleteCC(${c.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  const combined=loansHTML+ccsHTML;
+  el.innerHTML=combined||'<div class="empty"><div class="ei">🏦</div><p>Henüz kredi veya kart eklenmedi.<br>+ butonundan ekleyebilirsiniz.</p></div>';
+}
+
+// DAILY
+function dailyRowHTML(d,showDel=true){
+  const emoji=d.category.split(' ')[0];
+  const catName=d.category.split(' ').slice(1).join(' ');
+  return `<div class="tx-row">
+    <div class="tx-ico" style="background:var(--orange-dim)">${emoji}</div>
+    <div class="tx-info"><div class="tx-name">${d.name}</div><div class="tx-meta">${catName} · ${dateStr(d.date)}</div></div>
+    <div class="tx-amt neg">${fmt(d.amount)}</div>
+    ${showDel?`<button class="del-btn" onclick="deleteDaily(${d.id})">✕</button>`:''}
+  </div>`;
+}
+
+function renderDaily(){
+  const now=new Date();
+  let items=S.daily;
+  if(S.dailyFilter==='today') items=items.filter(d=>d.date===today());
+  else if(S.dailyFilter==='week'){
+    const w=new Date(now); w.setDate(w.getDate()-7);
+    items=items.filter(d=>new Date(d.date)>=w);
+  } else if(S.dailyFilter==='month'){
+    const m=new Date(now.getFullYear(),now.getMonth(),1);
+    items=items.filter(d=>new Date(d.date)>=m);
+  }
+  const monthTotal=S.daily.filter(d=>{
+    const m=new Date(now.getFullYear(),now.getMonth(),1);
+    return new Date(d.date)>=m;
+  }).reduce((s,d)=>s+d.amount,0);
+  document.getElementById('dailySub').textContent='Bu ay: '+fmt(monthTotal);
+
+  // Group by date
+  const groups={};
+  items.forEach(d=>{groups[d.date]=(groups[d.date]||[]).concat(d);});
+  const el=document.getElementById('dailyList');
+  const keys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  if(!keys.length){el.innerHTML='<div class="empty"><div class="ei">🧾</div><p>Harcama bulunamadı</p></div>';return;}
+  el.innerHTML=keys.map(date=>{
+    const dayItems=groups[date];
+    const dayTotal=dayItems.reduce((s,d)=>s+d.amount,0);
+    const label=date===today()?'Bugün':dateStr(date,{weekday:'long',day:'numeric',month:'long'});
+    return `<div class="day-group">
+      <div class="day-label"><span>${label}</span><span class="day-total">${fmt(dayTotal)}</span></div>
+      <div class="tx-list" style="padding:0">${dayItems.map(d=>dailyRowHTML(d,true)).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// REMINDERS
+function remCardHTML(r,showDel=true){
+  const urg=urgency(r.date,r.done);
+  const emoji=r.type.split(' ')[0];
+  const dStr=dateStr(r.date,{day:'numeric',month:'long'});
+  const diff=Math.ceil((new Date(r.date)-new Date())/86400000);
+  const dinfo=r.done?'Ödendi ✅':diff<0?Math.abs(diff)+' gün geçti!':diff===0?'Bugün!':diff+' gün kaldı';
+  const urgColor=r.done?'var(--text2)':urg.cls==='urgent'?'var(--red)':urg.cls==='soon'?'var(--yellow)':'var(--accent)';
+  return `<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid ${r.done?'var(--border)':urg.cls==='urgent'?'rgba(248,113,113,0.2)':urg.cls==='soon'?'rgba(251,191,36,0.15)':'var(--border)'};border-radius:13px;padding:13px;margin:0 18px 8px;${r.done?'opacity:.5':''}animation:fup 0.25s ease">
+    <div style="width:42px;height:42px;border-radius:13px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">${emoji}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;${r.done?'text-decoration:line-through':''}">${r.title}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">📅 ${dStr}</div>
+      <div style="font-size:11px;font-weight:700;margin-top:3px;color:${urgColor}">${dinfo}</div>
+      ${r.amount>0?`<div style="font-size:13px;font-weight:800;color:var(--yellow);margin-top:3px">${fmt(r.amount)}</div>`:''}
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+      <button onclick="toggleRem(${r.id})" style="width:28px;height:28px;border-radius:9px;border:2px solid ${r.done?'var(--accent)':'var(--border)'};background:${r.done?'var(--accent)':'none'};cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:${r.done?'#080a0f':'transparent'};transition:all 0.2s">${r.done?'✓':''}</button>
+      ${showDel?`<button class="del-btn" style="padding:6px" onclick="deleteRem(${r.id})">✕</button>`:''}
+    </div>
+  </div>`;
+}
+
+function renderRems(){
+  let rems=S.rems;
+  if(S.remFilter==='pending') rems=rems.filter(r=>!r.done);
+  if(S.remFilter==='done') rems=rems.filter(r=>r.done);
+  rems=rems.sort((a,b)=>a.done-b.done||new Date(a.date)-new Date(b.date));
+  document.getElementById('remList').innerHTML=rems.length?rems.map(r=>remCardHTML(r,true)).join(''):'<div class="empty"><div class="ei">🔔</div><p>Hatırlatma bulunamadı</p></div>';
+}
+
+// BUDGET
+function renderBudget(){
+  const expense=S.daily.reduce((s,d)=>s+d.amount,0);
+  const totalDebt=[...S.loans.map(l=>l.remaining),...S.ccs.map(c=>c.debt)].reduce((a,b)=>a+b,0);
+  const pct=S.budget>0?Math.min(100,expense/S.budget*100):0;
+  const color=pct>90?'var(--red)':pct>70?'var(--yellow)':'var(--accent)';
+  document.getElementById('bSpent').textContent=fmt(expense);
+  document.getElementById('bSpent').style.color=color;
+  document.getElementById('bFill').style.width=pct+'%';
+  document.getElementById('bFill').style.background=color;
+  document.getElementById('bPct').textContent=Math.round(pct)+'%';
+  document.getElementById('bLim').textContent=fmt(S.budget||0);
+  document.getElementById('bsLim').textContent=fmt(S.budget||0);
+  const rem=S.budget-expense;
+  const re=document.getElementById('bsRem');
+  re.textContent=S.budget?(rem>=0?fmt(rem):fmt(Math.abs(rem))+' aşıldı!'):'—';
+  re.style.color=rem>=0?'var(--accent)':'var(--red)';
+  document.getElementById('bsIn').textContent=fmt(expense);
+  document.getElementById('bsDebt').textContent=fmt(totalDebt);
+
+  // Category breakdown
+  const cats={};
+  S.daily.forEach(d=>{cats[d.category]=(cats[d.category]||0)+d.amount;});
+  const entries=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const maxV=entries[0]?.[1]||1;
+  const colors=['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa','#fb923c','#34d399','#38bdf8'];
+  document.getElementById('catGrid').innerHTML=entries.length?entries.map(([cat,amt],i)=>`
+    <div style="display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px">
+      <div style="width:38px;height:38px;border-radius:11px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${cat.split(' ')[0]}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700">${cat.split(' ').slice(1).join(' ')}</div>
+        <div style="height:4px;background:var(--surface2);border-radius:2px;margin-top:6px"><div style="height:100%;border-radius:2px;width:${Math.round(amt/maxV*100)}%;background:${colors[i%colors.length]};transition:width 0.5s ease"></div></div>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:${colors[i%colors.length]}">${fmt(amt)}</div>
+    </div>`).join(''):'<div class="empty"><div class="ei">📊</div><p>Harcama verisi yok</p></div>';
+}
+</script>
+</body>
+</html>
